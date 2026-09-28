@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEDICO
+  PACIENTE
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senhaHash String
+  role      Role
+  criadoEm  DateTime @default(now())
+  medico    Medico?
+  paciente  Paciente?
+}
+
+model Especialidade {
+  id   Int    @id @default(autoincrement())
+  nome String @unique
+  medicos Medico[]
+}
+
+model Medico {
+  id              Int           @id @default(autoincrement())
+  crm             String        @unique
+  usuarioId       Int           @unique
+  usuario         Usuario       @relation(fields: [usuarioId], references: [id])
+  especialidadeId Int
+  especialidade   Especialidade @relation(fields: [especialidadeId], references: [id])
+  consultas       Consulta[]
+}
+
+model Paciente {
+  id        Int     @id @default(autoincrement())
+  cpf       String  @unique
+  telefone  String
+  usuarioId Int     @unique
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  consultas Consulta[]
+}
+
+enum StatusConsulta {
+  AGENDADA
+  CANCELADA
+  CONCLUIDA
+}
+
+model Consulta {
+  id          Int            @id @default(autoincrement())
+  dataHora    DateTime
+  status      StatusConsulta @default(AGENDADA)
+  observacoes String?
+  criadoEm    DateTime       @default(now())
+  medicoId    Int
+  medico      Medico         @relation(fields: [medicoId], references: [id])
+  pacienteId  Int
+  paciente    Paciente       @relation(fields: [pacienteId], references: [id])
+}
