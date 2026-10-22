@@ -1,7 +1,23 @@
 const prisma = require('../lib/prisma');
 
 async function criar(req, res) {
-  const { medicoId, pacienteId, dataHora, observacoes } = req.body;
+  const { medicoId, dataHora, observacoes } = req.body;
+  let pacienteId = req.body.pacienteId;
+  const { id: usuarioId, role } = req.usuario;
+
+  if (role === 'MEDICO') {
+    return res.status(403).json({ erro: 'Médicos não marcam consultas' });
+  }
+
+  if (role === 'PACIENTE') {
+    const paciente = await prisma.paciente.findUnique({ where: { usuarioId } });
+
+    if (!paciente) {
+      return res.status(403).json({ erro: 'Perfil de paciente não encontrado' });
+    }
+
+    pacienteId = paciente.id;
+  }
 
   const inicio = new Date(dataHora);
   const fim = new Date(inicio.getTime() + 30 * 60 * 1000);
@@ -31,22 +47,39 @@ async function criar(req, res) {
     },
   });
 
-  
-
   res.status(201).json(consulta);
 }
 
 async function listar(req, res) {
   const { medicoId, pacienteId } = req.query;
+  const { id: usuarioId, role } = req.usuario;
 
   const filtro = {};
 
-  if (medicoId) {
-    filtro.medicoId = Number(medicoId);
-  }
+  if (role === 'PACIENTE') {
+    const paciente = await prisma.paciente.findUnique({ where: { usuarioId } });
 
-  if (pacienteId) {
-    filtro.pacienteId = Number(pacienteId);
+    if (!paciente) {
+      return res.status(403).json({ erro: 'Perfil de paciente não encontrado' });
+    }
+
+    filtro.pacienteId = paciente.id;
+  } else if (role === 'MEDICO') {
+    const medico = await prisma.medico.findUnique({ where: { usuarioId } });
+
+    if (!medico) {
+      return res.status(403).json({ erro: 'Perfil de médico não encontrado' });
+    }
+
+    filtro.medicoId = medico.id;
+  } else {
+    if (medicoId) {
+      filtro.medicoId = Number(medicoId);
+    }
+
+    if (pacienteId) {
+      filtro.pacienteId = Number(pacienteId);
+    }
   }
 
   const consultas = await prisma.consulta.findMany({
