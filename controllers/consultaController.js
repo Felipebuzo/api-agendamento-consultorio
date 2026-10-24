@@ -132,4 +132,36 @@ async function horariosLivres(req, res) {
   res.json(horarios);
 }
 
-module.exports = { criar, listar, horariosLivres };
+async function cancelar(req, res) {
+  const { id } = req.params;
+  const { id: usuarioId, role } = req.usuario;
+
+  const consulta = await prisma.consulta.findUnique({
+    where: { id: Number(id) },
+    include: { paciente: true, medico: true },
+  });
+
+  if (!consulta) {
+    return res.status(404).json({ erro: 'Consulta não encontrada' });
+  }
+
+  const ehDonoPaciente = role === 'PACIENTE' && consulta.paciente.usuarioId === usuarioId;
+  const ehDonoMedico = role === 'MEDICO' && consulta.medico.usuarioId === usuarioId;
+
+  if (role !== 'ADMIN' && !ehDonoPaciente && !ehDonoMedico) {
+    return res.status(403).json({ erro: 'Acesso negado' });
+  }
+
+  if (consulta.status !== 'AGENDADA') {
+    return res.status(409).json({ erro: 'Só é possível cancelar consultas agendadas' });
+  }
+
+  const consultaAtualizada = await prisma.consulta.update({
+    where: { id: Number(id) },
+    data: { status: 'CANCELADA' },
+  });
+
+  res.json(consultaAtualizada);
+}
+
+module.exports = { criar, listar, horariosLivres, cancelar };
