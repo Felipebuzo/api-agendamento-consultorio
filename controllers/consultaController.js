@@ -164,4 +164,57 @@ async function cancelar(req, res) {
   res.json(consultaAtualizada);
 }
 
-module.exports = { criar, listar, horariosLivres, cancelar };
+async function remarcar(req, res) {
+  const { id } = req.params;
+  const { dataHora } = req.body;
+  const { id: usuarioId, role } = req.usuario;
+
+  const consulta = await prisma.consulta.findUnique({
+    where: { id: Number(id) },
+    include: { paciente: true, medico: true },
+  });
+
+  if (!consulta) {
+    return res.status(404).json({ erro: 'Consulta não encontrada' });
+  }
+
+  const ehDonoPaciente = role === 'PACIENTE' && consulta.paciente.usuarioId === usuarioId;
+  const ehDonoMedico = role === 'MEDICO' && consulta.medico.usuarioId === usuarioId;
+
+  if (role !== 'ADMIN' && !ehDonoPaciente && !ehDonoMedico) {
+    return res.status(403).json({ erro: 'Acesso negado' });
+  }
+
+  if (consulta.status !== 'AGENDADA') {
+    return res.status(409).json({ erro: 'Só é possível remarcar consultas agendadas' });
+  }
+
+  const inicio = new Date(dataHora);
+  const fim = new Date(inicio.getTime() + 30 * 60 * 1000);
+  const margemAnterior = new Date(inicio.getTime() - 30 * 60 * 1000);
+
+  const conflito = await prisma.consulta.findFirst({
+    where: {
+      id: { not: consulta.id },
+      medicoId: consulta.medicoId,
+      status: 'AGENDADA',
+      dataHora: {
+        gt: margemAnterior,
+        lt: fim,
+      },
+    },
+  });
+
+  if (conflito) {
+    return res.status(409).json({ erro: 'Horário indisponível para este médico' });
+  }
+
+  const consultaAtualizada = await prisma.consulta.update({
+    where: { id: Number(id) },
+    data: { dataHora: inicio },
+  });
+
+  res.json(consultaAtualizada);
+}
+
+module.exports = { criar, listar, horariosLivres, cancelar, remarcar };
