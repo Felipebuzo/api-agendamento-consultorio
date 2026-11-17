@@ -8,8 +8,10 @@ const {
 } = require('../controllers/especialidadeController');
 const autenticar = require('../middlewares/autenticar');
 const autorizar = require('../middlewares/autorizar');
+const validar = require('../middlewares/validar');
+const { especialidadeSchema } = require('../schemas/especialidadeSchemas');
 
-router.post('/especialidades', autenticar, autorizar('ADMIN'), criar);
+router.post('/especialidades', autenticar, autorizar('ADMIN'), validar(especialidadeSchema), criar);
 router.get('/especialidades', autenticar, listar);
 router.get('/especialidades/:id', autenticar, buscarPorId);
 router.delete('/especialidades/:id', autenticar, autorizar('ADMIN'), deletar);
