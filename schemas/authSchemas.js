@@ -8,8 +8,13 @@ const loginSchema = z.object({
 
 // Regras do cadastro de usuário (feito pelo admin)
 const cadastroSchema = z.object({
-  nome: z.string({ error: 'O nome é obrigatório' }).min(2, 'O nome deve ter pelo menos 2 caracteres'),
-  email: z.email({ error: 'Informe um email válido' }),
+  nome: z
+    .string({ error: 'O nome é obrigatório' })
+    .min(2, 'O nome deve ter pelo menos 2 caracteres')
+    .max(191, 'O nome deve ter no máximo 191 caracteres'),
+  email: z
+    .email({ error: 'Informe um email válido' })
+    .max(191, 'O email deve ter no máximo 191 caracteres'),
   senha: z
     .string({ error: 'A senha é obrigatória' })
     .min(8, 'A senha deve ter pelo menos 8 caracteres')

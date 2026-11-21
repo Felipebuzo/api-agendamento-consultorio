@@ -7,6 +7,7 @@ const especialidadeRoutes = require('./routes/especialidadeRoutes');
 const medicoRoutes = require('./routes/medicoRoutes'); 
 const pacienteRoutes = require('./routes/pacienteRoutes');
 const consultaRoutes = require('./routes/consultaRoutes');
+const tratarErros = require('./middlewares/tratarErros');
 
 app.use(express.json());
 app.use('/api', authRoutes);
@@ -18,6 +19,10 @@ app.use('/api', consultaRoutes);
 app.get('/', (req, res) => {
   res.json({ mensagem: 'API de agendamento de consultórios funcionando!' });
 });
+
+
+
+app.use(tratarErros);
 
 const PORT = process.env.PORT || 3333;
 
