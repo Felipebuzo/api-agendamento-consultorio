@@ -1,7 +1,7 @@
 
-function validar(schema) {
+function validar(schema, origem = 'body') {
   return (req, res, next) => {
-    const resultado = schema.safeParse(req.body);
+    const resultado = schema.safeParse(req[origem]);
 
     if (!resultado.success) {
       const erros = resultado.error.issues.map((problema) => ({
@@ -12,7 +12,11 @@ function validar(schema) {
       return res.status(400).json({ erro: 'Dados inválidos', detalhes: erros });
     }
 
-    req.body = resultado.data;
+    
+    if (origem === 'body') {
+      req.body = resultado.data;
+    }
+
     next();
   };
 }
