@@ -19,6 +19,7 @@ API REST para agendamento de consultas em consultórios, com autenticação JWT 
 - Consulta de horários livres de um médico em um dia
 - Validação de corpo, query e parâmetros da requisição
 - Tratamento centralizado de erros, sem vazar detalhes internos
+- Script de seed para criar o primeiro administrador com segurança
 
 ## Como rodar na sua máquina
 
@@ -48,6 +49,9 @@ npm install
 DATABASE_URL="mysql://usuario:senha@localhost:3306/agendamento_consultorio"
 JWT_SECRET="uma-chave-secreta-longa-e-dificil-de-adivinhar"
 PORT=3333
+ADMIN_NOME="Administrador"
+ADMIN_EMAIL="admin@exemplo.com"
+ADMIN_SENHA="troque-por-uma-senha-forte"
 ```
 
 4. Crie as tabelas no banco:
@@ -56,13 +60,19 @@ PORT=3333
 npx prisma migrate dev
 ```
 
-5. Ligue a API:
+5. Crie o primeiro administrador (usa o `ADMIN_EMAIL` e a `ADMIN_SENHA` do `.env`):
+
+```bash
+npm run seed
+```
+
+6. Ligue a API:
 
 ```bash
 npm run dev
 ```
 
-A API fica disponível em `http://localhost:3333`.
+A API fica disponível em `http://localhost:3333`. Para testar, faça login em `POST /api/login` com o email e a senha do administrador criado no passo 5.
 
 ### Scripts
 
@@ -70,6 +80,7 @@ A API fica disponível em `http://localhost:3333`.
 |---|---|
 | `npm run dev` | Liga a API e reinicia sozinha ao salvar arquivos (nodemon) |
 | `npm start` | Liga a API do jeito simples |
+| `npm run seed` | Cria o primeiro admin no banco (pode rodar mais de uma vez, não duplica) |
 
 ## Rotas
 
@@ -108,6 +119,7 @@ Todas as rotas ficam sob o prefixo `/api`. As rotas protegidas exigem o header `
 - O login responde com uma mensagem genérica para não revelar se o email existe.
 - Ordem das verificações em cada rota: autenticação, permissão, validação e só então a regra de negócio.
 - Erros inesperados devolvem apenas "Erro interno do servidor"; o detalhe fica no terminal.
+- O primeiro administrador é criado por script (seed), com email e senha vindos do `.env`, que não vai para o repositório.
 
 ## Autor
 
