@@ -1,28 +1,7 @@
+// O dotenv precisa vir primeiro: o Prisma e o JWT leem o .env assim que o app é carregado
 require('dotenv').config();
 
-const express = require('express');
-const app = express();
-const authRoutes = require('./routes/authRoutes');
-const especialidadeRoutes = require('./routes/especialidadeRoutes');
-const medicoRoutes = require('./routes/medicoRoutes'); 
-const pacienteRoutes = require('./routes/pacienteRoutes');
-const consultaRoutes = require('./routes/consultaRoutes');
-const tratarErros = require('./middlewares/tratarErros');
-
-app.use(express.json());
-app.use('/api', authRoutes);
-app.use('/api', especialidadeRoutes);
-app.use('/api', medicoRoutes);
-app.use('/api', pacienteRoutes); 
-app.use('/api', consultaRoutes);  
-
-app.get('/', (req, res) => {
-  res.json({ mensagem: 'API de agendamento de consultórios funcionando!' });
-});
-
-
-
-app.use(tratarErros);
+const app = require('./app');
 
 const PORT = process.env.PORT || 3333;
 
